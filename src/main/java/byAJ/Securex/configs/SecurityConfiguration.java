@@ -1,5 +1,8 @@
 package byAJ.Securex.configs;
 
+import byAJ.Securex.models.SSUserDetailsService;
+import byAJ.Securex.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -19,16 +22,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter{
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/books/list/**", "/").permitAll()//to show without login
+                .antMatchers("/","/css/bootstrap.min.css","/books/list").permitAll()
                 .antMatchers("/books/edit/**").hasRole("ADMIN")
-                .antMatchers("/css/bootstrap.min.css").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin().loginPage("/login").permitAll()
                 .and()
                 .logout()
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                .logoutSuccessUrl("/").permitAll()
+                .logoutSuccessUrl("/login").permitAll()
                 .and()
                 .httpBasic();
 
@@ -36,12 +38,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter{
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.inMemoryAuthentication().
-                withUser("user").password("password").roles("USER").and().
-                withUser("dave").password("pass").roles("USERS").and().
-                withUser("fee").password("gr8").roles("USERS").and().
-                withUser("root").password("pass").roles("ADMIN");;
-
-
+        auth.userDetailsService(userDetailsServiceBean());
+    }
+    @Autowired private UserRepository userRepository;
+    @Override
+    public UserDetailsService userDetailsServiceBean() throws Exception {
+        return new SSUserDetailsService(userRepository);
     }
 }
